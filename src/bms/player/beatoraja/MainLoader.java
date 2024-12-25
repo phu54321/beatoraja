@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
-import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
@@ -55,7 +54,7 @@ public class MainLoader extends Application {
 
 		Logger logger = Logger.getGlobal();
 		try {
-			logger.addHandler(new FileHandler("beatoraja_log.xml"));
+			logger.addHandler(new AsyncFileHandler("beatoraja_log.xml"));
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
