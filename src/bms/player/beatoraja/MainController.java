@@ -7,6 +7,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.math.Matrix4;
 import org.lwjgl.input.Mouse;
 
 import com.badlogic.gdx.*;
@@ -94,6 +96,9 @@ public class MainController {
 
 	private RankingDataCache ircache = new RankingDataCache();
 
+	private FrameBuffer renderFbo;
+	private TextureRegion renderFboRegion;
+	private Matrix4 fboProjectionMatrix;
 	private SpriteBatch sprite;
 	/**
 	 * 1曲プレイで指定したBMSファイル
@@ -309,6 +314,16 @@ public class MainController {
 
 	public void create() {
 		final long t = System.currentTimeMillis();
+
+		Resolution renderResolution = config.getResolution();
+
+		renderFbo = new FrameBuffer(Pixmap.Format.RGB888, renderResolution.width, renderResolution.height, false);
+		renderFboRegion = new TextureRegion(renderFbo.getColorBufferTexture());
+		renderFboRegion.flip(false, true);
+
+		fboProjectionMatrix = new Matrix4();
+		fboProjectionMatrix.setToOrtho2D(0.0f, 0.0f, renderResolution.width, renderResolution.height);
+
 		sprite = new SpriteBatch();
 		SkinLoader.initPixmapResourcePool(config.getSkinPixmapGen());
 
@@ -419,13 +434,24 @@ public class MainController {
 
 	private final StringBuilder message = new StringBuilder();
 
+	public Matrix4 getViewportProjectionMatrix() {
+		return fboProjectionMatrix;
+	}
+
 	public void render() {
 //		input.poll();
-		timerLock.lock();
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		Matrix4 oldProjectionMatrix = sprite.getProjectionMatrix().cpy();
+		sprite.setProjectionMatrix(fboProjectionMatrix);
+
+		renderFbo.begin();
+		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        timerLock.lock();
 		try {
 			timer.update();
-			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
 			current.render();
 			sprite.begin();
 			if (current.getSkin() != null) {
@@ -516,6 +542,24 @@ public class MainController {
 		if(download != null && download.isDownload()){
 			downloadIpfsMessageRenderer(download.getMessage());
 		}
+
+		renderFbo.end();
+
+		Resolution renderResolution = config.getResolution();
+		float displayWidth = Gdx.graphics.getWidth();
+		float displayHeight = Gdx.graphics.getHeight();
+		float scaleX = displayWidth / (float) renderResolution.width;
+		float scaleY = displayHeight / (float) renderResolution.height;
+		float scale = Math.min(scaleX, scaleY);
+		float renderDisplayWidth = (renderResolution.width * scale);
+		float renderDisplayHeight = (renderResolution.height * scale);
+		float offsetX = (displayWidth - renderDisplayWidth) / 2;
+		float offsetY = (displayHeight - renderDisplayHeight) / 2;
+		sprite.setProjectionMatrix(oldProjectionMatrix);
+		sprite.begin();
+		sprite.draw(renderFboRegion, offsetX, offsetY, renderDisplayWidth, renderDisplayHeight);
+		sprite.end();
+
 
 		final long time = System.currentTimeMillis();
 		if(time > prevtime) {
@@ -646,6 +690,8 @@ public class MainController {
 		if (download != null) {
 			download.dispose();
 		}
+
+		renderFbo.dispose();
 
 		Logger.getGlobal().info("全リソース破棄完了");
 	}
