@@ -264,7 +264,10 @@ public class Skin {
 			} else {
 				transform.set(0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 			}
-			sprite.setTransformMatrix(transform);
+
+			Matrix4 newTransform = sprite.getTransformMatrix().cpy();
+			newTransform.mul(transform);
+			sprite.setTransformMatrix(newTransform);
 			renderer = new SkinObjectRenderer(sprite);
 		}
 		

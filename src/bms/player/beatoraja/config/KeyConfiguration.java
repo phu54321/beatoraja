@@ -116,6 +116,7 @@ public class KeyConfiguration extends MainState {
 		}
 
 		shape = new ShapeRenderer();
+		shape.setProjectionMatrix(main.getViewportProjectionMatrix());
 
 		input = main.getInputProcessor();
 		keyboard = input.getKeyBoardInputProcesseor();

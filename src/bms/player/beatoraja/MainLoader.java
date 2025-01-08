@@ -124,6 +124,8 @@ public class MainLoader extends Application {
 			cfg.width = config.getResolution().width;
 			cfg.height = config.getResolution().height;
 
+			Graphics.DisplayMode displayMode = getDesktopDisplayMode();
+
 			// fullscreen
 			switch (config.getDisplaymode()) {
 				case FULLSCREEN:
@@ -132,6 +134,8 @@ public class MainLoader extends Application {
 				case BORDERLESS:
 					System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
 					cfg.fullscreen = false;
+					cfg.width = displayMode.width;
+					cfg.height = displayMode.height;
 					break;
 				case WINDOW:
 					cfg.fullscreen = false;
