@@ -10,7 +10,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Spinner;
+import org.lwjgl.LWJGLUtil;
 
+import java.awt.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -82,8 +84,24 @@ public class VideoConfigurationView implements Initializable {
 			}
 		} else {
 			Graphics.DisplayMode display = MainLoader.getDesktopDisplayMode();
+			int maxWidth = display.width;
+			int maxHeight = display.height;
+
+			// macOS specific fix - detect retina display
+			int platform = LWJGLUtil.getPlatform();
+			if (platform == LWJGLUtil.PLATFORM_MACOSX) {
+				GraphicsEnvironment genv = GraphicsEnvironment.getLocalGraphicsEnvironment();
+				GraphicsDevice device = genv.getDefaultScreenDevice();
+				var conf = device.getDefaultConfiguration();
+				var transform = conf.getDefaultTransform();
+				if (!transform.isIdentity()) {
+					maxWidth *= 2;
+					maxHeight *= 2;
+				}
+			}
+
 			for(Resolution r : Resolution.values()) {
-				if (r.width <= display.width && r.height <= display.height) {
+				if (r.width <= maxWidth && r.height <= maxHeight) {
 					resolution.getItems().add(r);
 				}
 			}
