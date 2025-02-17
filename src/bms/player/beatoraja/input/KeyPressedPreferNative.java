@@ -24,6 +24,8 @@ import org.lwjgl.LWJGLUtil;
 import org.lwjgl.opengl.Display;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
 
 import static bms.player.beatoraja.input.WinNativeMethods.GetForegroundWindow;
 import static bms.player.beatoraja.input.WinNativeMethods.isKeyPressedAsync;
@@ -238,12 +240,30 @@ public class KeyPressedPreferNative {
         }
     }
 
+    static Set<Integer> pressedKeys = new HashSet<>();
+    static long lastKeyUpdateTime = 0;
+
     public static boolean isKeyPressed(int gdxKey) {
         int platform = LWJGLUtil.getPlatform();
+        boolean ret;
         if (platform == LWJGLUtil.PLATFORM_WINDOWS) {
-            return windowsIsKeyPressed(gdxKey);
+            ret = windowsIsKeyPressed(gdxKey);
         } else {
-            return Gdx.input.isKeyPressed(gdxKey);
+            ret = Gdx.input.isKeyPressed(gdxKey);
+        }
+        boolean currentValue = (pressedKeys.contains(gdxKey));
+        if (currentValue == ret) {
+            return ret;
+        } else {
+            long t = System.nanoTime();
+            if (t - lastKeyUpdateTime >= 10_000_000) {
+                if (ret) pressedKeys.add(gdxKey);
+                else pressedKeys.remove(gdxKey);
+                lastKeyUpdateTime = t;
+                return ret;
+            } else {
+                return currentValue;
+            }
         }
     }
 }
