@@ -376,7 +376,7 @@ public class MainController {
 		Thread polling = new Thread(() -> {
 			long time = 0;
 			for (;;) {
-				final long now = System.nanoTime() / 1000000;
+				final long now = System.nanoTime() / 10_000_000;
 				if (time != now) {
 					time = now;
 					input.poll();

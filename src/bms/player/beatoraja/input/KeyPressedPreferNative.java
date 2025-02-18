@@ -256,7 +256,7 @@ public class KeyPressedPreferNative {
             return ret;
         } else {
             long t = System.nanoTime();
-            if (t - lastKeyUpdateTime >= 10_000_000) {
+            if (t - lastKeyUpdateTime >= 3_000_000) {
                 if (ret) pressedKeys.add(gdxKey);
                 else pressedKeys.remove(gdxKey);
                 lastKeyUpdateTime = t;
