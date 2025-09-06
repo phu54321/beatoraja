@@ -10,7 +10,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Spinner;
+import org.lwjgl.LWJGLUtil;
 
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -65,6 +68,13 @@ public class VideoConfigurationView implements Initializable {
 		player.setMisslayerDuration(missLayerTime.getValue());
 	}
 
+    static double getDeviceScale(GraphicsDevice dev) {
+        GraphicsConfiguration gc = dev.getDefaultConfiguration();
+        AffineTransform tx = gc.getDefaultTransform();   // HiDPI-aware on macOS
+        return tx.getScaleX();                           // usually 1.0 or 2.0
+    }
+
+
 	@FXML
 	public void updateResolutions() {
 		Resolution oldValue = resolution.getValue();
@@ -82,8 +92,23 @@ public class VideoConfigurationView implements Initializable {
 			}
 		} else {
 			Graphics.DisplayMode display = MainLoader.getDesktopDisplayMode();
+            int displayWidth = display.width;
+            int displayHeight= display.height;
+            if (LWJGLUtil.getPlatform() == LWJGLUtil.PLATFORM_MACOSX) {
+                double scale = GraphicsEnvironment
+                        .getLocalGraphicsEnvironment()
+                        .getDefaultScreenDevice()
+                        .getDefaultConfiguration()
+                        .getDefaultTransform()
+                        .getScaleX();
+                if (scale > 1.0) {
+                    displayWidth *= 2;
+                    displayHeight *= 2;
+                }
+            }
+
 			for(Resolution r : Resolution.values()) {
-				if (r.width <= display.width && r.height <= display.height) {
+				if (r.width <= displayWidth && r.height <= displayHeight) {
 					resolution.getItems().add(r);
 				}
 			}
